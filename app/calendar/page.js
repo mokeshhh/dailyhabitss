@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import { supabase } from '@/lib/supabase';
 import { HABITS, toDateStr } from '@/lib/habits';
@@ -20,6 +20,10 @@ export default function CalendarPage() {
   const [saving,     setSaving]     = useState({});
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState(null);
+  const [note,       setNote]       = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved,  setNoteSaved]  = useState(false);
+  const debounceRef  = useRef(null);
 
   useEffect(() => {
     const now = new Date();
@@ -58,6 +62,33 @@ export default function CalendarPage() {
   useEffect(() => {
     setSelectedLog(monthData[selected] || {});
   }, [selected, monthData]);
+
+  // Fetch note for selected date
+  const fetchNote = useCallback(async () => {
+    if (!supabase || !selected) return;
+    setNote('');
+    const { data } = await supabase.from('daily_notes').select('note').eq('date', selected).maybeSingle();
+    setNote(data?.note || '');
+  }, [selected]);
+
+  useEffect(() => { fetchNote(); }, [fetchNote]);
+
+  function handleNoteChange(val) {
+    setNote(val); setNoteSaved(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => saveNote(val), 1200);
+  }
+
+  async function saveNote(text) {
+    if (!supabase || !selected) return;
+    setNoteSaving(true);
+    await supabase.from('daily_notes').upsert(
+      { date: selected, note: text, updated_at: new Date().toISOString() },
+      { onConflict: 'date' }
+    );
+    setNoteSaving(false); setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 2000);
+  }
 
   async function toggleHabit(habitKey) {
     if (!supabase || !selected) return;
@@ -247,6 +278,26 @@ export default function CalendarPage() {
                     </div>
                   );
                 })
+              )}
+
+              {/* ── DAY NOTE ── */}
+              {!loading && (
+                <div className="day-note-section">
+                  <div className="day-note-header">
+                    <span>📝 Note</span>
+                    <span className="day-note-status">
+                      {noteSaving && <span style={{ color:'var(--text-muted)', fontSize:'0.7rem' }}>saving…</span>}
+                      {noteSaved  && <span style={{ color:'var(--success)',    fontSize:'0.7rem' }}>✓ saved</span>}
+                    </span>
+                  </div>
+                  <textarea
+                    className="day-note-textarea"
+                    placeholder="Any note for this day…"
+                    value={note}
+                    onChange={e => handleNoteChange(e.target.value)}
+                    rows={3}
+                  />
+                </div>
               )}
             </div>
           </div>

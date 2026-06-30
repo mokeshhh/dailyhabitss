@@ -321,6 +321,33 @@ html, body {
 }
 .mini-habit-row.done .mini-check { background: var(--success); border-color: var(--success); color: #fff; }
 
+/* ── DAY NOTE (calendar panel) ── */
+.day-note-section {
+  padding: 0.85rem 1.25rem 1rem;
+  border-top: 1px solid var(--border);
+}
+.day-note-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);
+}
+.day-note-status { display: flex; align-items: center; gap: 4px; }
+.day-note-textarea {
+  width: 100%; resize: vertical; min-height: 72px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border); border-radius: var(--radius-xs);
+  color: var(--text-primary); padding: 0.6rem 0.8rem;
+  font-size: 0.85rem; font-family: 'Inter', sans-serif;
+  line-height: 1.5; outline: none; transition: border-color 0.2s;
+}
+.day-note-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: #fff;
+}
+.day-note-textarea::placeholder { color: var(--text-muted); }
+
+
 /* ── MONTH STATS ── */
 .stats-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
